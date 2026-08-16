@@ -1,0 +1,19 @@
+{
+  "name": "Masjid Ledger — Financial & Trustee Management",
+  "short_name": "Masjid Ledger",
+  "description": "Offline-first financial ledger and committee management for masjids",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#022c22",
+  "theme_color": "#022c22",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='128' fill='%23022c22'/><circle cx='256' cy='256' r='200' fill='none' stroke='%23C8A348' stroke-width='16'/><text x='50%' y='58%' dominant-baseline='middle' text-anchor='middle' font-family='serif' font-size='260' font-weight='bold' fill='%23C8A348'>م</text></svg>",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
