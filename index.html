@@ -1,0 +1,2053 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#022c22" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Masjid Ledger — Financial & Trustee Management</title>
+  
+  <!-- Manifest for PWA Capabilities -->
+  <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiTWFzamlkIExlZGdlciIsInNob3J0X25hbWUiOiJNYXNqaWRMZWRnZXIiLCJzdGFydF91cmwiOiIuIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiIzAyMmMyMiIsInRoZW1lX2NvbG9yIjoiIzAyMmMyMiJ9" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            emerald: {
+              50: '#F2F9F6',
+              100: '#E2F2EB',
+              200: '#C5E5D7',
+              700: '#046A4E',
+              800: '#034E39',
+              850: '#023E2E',
+              900: '#022C22',
+              950: '#011C15'
+            },
+            ivory: {
+              50: '#FCFAF6',
+              100: '#F7F3EB',
+              200: '#EFE8DA',
+              300: '#E2D7C2',
+              400: '#CFC0A3'
+            },
+            gold: {
+              300: '#EED696',
+              400: '#E5C46E',
+              500: '#C8A348',
+              600: '#A4812F',
+              700: '#7E601C'
+            },
+            charcoal: {
+              800: '#1F2937',
+              900: '#111827',
+              950: '#0B0F17'
+            }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'],
+            serif: ['Amiri', '"Playfair Display"', 'Georgia', 'serif']
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Google Fonts: Plus Jakarta Sans for UI + Amiri for Refined Headings -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    
+    * {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      background-color: #F7F3EB;
+      color: #111827;
+      letter-spacing: -0.01em;
+    }
+
+    .font-serif-islamic {
+      font-family: 'Amiri', 'Playfair Display', Georgia, serif;
+    }
+
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Soft Elevated Surfaces */
+    .card-surface {
+      background: #FFFFFF;
+      border: 1px solid rgba(226, 215, 194, 0.65);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02), 0 4px 12px rgba(17, 24, 39, 0.03);
+      transition: transform 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out), border-color 0.2s var(--ease-out);
+    }
+
+    .card-surface:hover {
+      border-color: rgba(200, 163, 72, 0.45);
+    }
+
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #F7F3EB;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #E2D7C2;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #C8A348;
+    }
+
+    /* Subtle View Fade Transitions */
+    .view-enter {
+      animation: viewFadeIn 0.25s var(--ease-out) forwards;
+    }
+    @keyframes viewFadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .view-enter, * {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+
+    /* Print Viewport */
+    @media print {
+      body * { visibility: hidden; }
+      #printable-report, #printable-report * { visibility: visible; }
+      #printable-report { position: absolute; left: 0; top: 0; width: 100%; border: none !important; box-shadow: none !important; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body class="h-full flex flex-col antialiased">
+
+  <!-- ================= NOTIFICATION TOAST CONTAINER ================= -->
+  <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none max-w-sm w-full px-4 sm:px-0"></div>
+
+  <!-- ================= PIN LOCK SCREEN ================= -->
+  <div id="pin-lock-overlay" class="fixed inset-0 z-50 bg-emerald-950 flex flex-col items-center justify-center p-4 hidden select-none backdrop-blur-md">
+    <div class="w-16 h-16 rounded-2xl bg-gradient-to-b from-gold-400/20 to-gold-600/10 border border-gold-400/30 flex items-center justify-center text-gold-400 mb-4 shadow-xl">
+      <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+    </div>
+    <h2 id="lock-masjid-title" class="text-2xl font-serif-islamic font-bold text-ivory-50 tracking-wide text-center">Markaz Masjid</h2>
+    <p class="text-xs font-medium text-ivory-200/70 mt-1 mb-8">Enter 4-Digit Security PIN</p>
+    
+    <div class="flex gap-4 mb-8" id="pin-dots">
+      <div class="w-3.5 h-3.5 rounded-full border border-ivory-300/30 transition-all duration-200"></div>
+      <div class="w-3.5 h-3.5 rounded-full border border-ivory-300/30 transition-all duration-200"></div>
+      <div class="w-3.5 h-3.5 rounded-full border border-ivory-300/30 transition-all duration-200"></div>
+      <div class="w-3.5 h-3.5 rounded-full border border-ivory-300/30 transition-all duration-200"></div>
+    </div>
+
+    <div class="grid grid-cols-3 gap-3.5 w-full max-w-[280px]">
+      <button onclick="app.enterPin('1')" class="h-14 rounded-2xl bg-emerald-900/50 hover:bg-emerald-850 active:bg-emerald-800 text-ivory-50 text-xl font-medium border border-emerald-800/60 shadow-sm transition-all duration-150">1</button>
+      <button onclick="app.enterPin('2')" class="h-14 rounded-2xl bg-emerald-900/50 hover:bg-emerald-850 active:bg-emerald-800 text-ivory-50 text-xl font-medium border border-emerald-800/60 shadow-sm transition-all duration-150">2</button>
+      <button onclick="app.enterPin('3')" class="h-14 rounded-2xl bg-emerald-900/50 hover:bg-emerald-850 active:bg-emerald-800 text-ivory-50 text-xl font-medium border border-emerald-800/60 shadow-sm transition-all duration-150">3</button>
+      <button onclick="app.enterPin('4')" class="h-14 rounded-2xl bg-emerald-900/50 hover:bg-emerald-850 active:bg-emerald-800 text-ivory-50 text-xl font-medium border border-emerald-800/60 shadow-sm transition-all duration-150">4</button>
+      <button onclick="app.enterPin('5')" class="h-14 rounded-2xl bg-emerald-900/50 hover:bg-emerald-850 active:bg-emerald-800 text-ivory-50 text-xl font-medium border border-emerald-800/60 shadow-sm transition-all duration-150">5</button>
+      <button onclick="app.enterPin('6')" class="h-14 rounded-2xl bg-emerald-900/50 hover:bg-emerald-850 active:bg-emerald-800 text-ivory-50 text-xl font-medium border border-emerald-800/60 shadow-sm transition-all duration-150">6</button>
+      <button onclick="app.enterPin('7')" class="h-14 rounded-2xl bg-emerald-900/50 hover:bg-emerald-850 active:bg-emerald-800 text-ivory-50 text-xl font-medium border border-emerald-800/60 shadow-sm transition-all duration-150">7</button>
+      <button onclick="app.enterPin('8')" class="h-14 rounded-2xl bg-emerald-900/50 hover:bg-emerald-850 active:bg-emerald-800 text-ivory-50 text-xl font-medium border border-emerald-800/60 shadow-sm transition-all duration-150">8</button>
+      <button onclick="app.enterPin('9')" class="h-14 rounded-2xl bg-emerald-900/50 hover:bg-emerald-850 active:bg-emerald-800 text-ivory-50 text-xl font-medium border border-emerald-800/60 shadow-sm transition-all duration-150">9</button>
+      <div class="h-14"></div>
+      <button onclick="app.enterPin('0')" class="h-14 rounded-2xl bg-emerald-900/50 hover:bg-emerald-850 active:bg-emerald-800 text-ivory-50 text-xl font-medium border border-emerald-800/60 shadow-sm transition-all duration-150">0</button>
+      <button onclick="app.backspacePin()" class="h-14 rounded-2xl bg-emerald-900/30 hover:bg-emerald-850 active:bg-emerald-800 text-ivory-300 text-sm font-medium border border-emerald-800/40 flex items-center justify-center transition-all duration-150">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 4H8l-7 8 7 8h13a2 2 0 002-2V6a2 2 0 00-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= HEADER ================= -->
+  <header class="bg-emerald-950 text-ivory-50 border-b border-emerald-900/80 sticky top-0 z-30 px-4 sm:px-8 py-3.5">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3.5">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-gold-400/25 to-gold-600/10 border border-gold-400/40 flex items-center justify-center text-gold-400 font-serif-islamic font-bold text-2xl shadow-inner">
+          م
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 id="header-masjid-name" class="font-serif-islamic font-bold text-lg leading-tight tracking-wide text-ivory-50">Markaz Masjid</h1>
+            <span class="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-emerald-900/80 text-gold-400 border border-gold-500/20">Ledger</span>
+          </div>
+          <p id="header-tagline" class="text-xs text-ivory-300/70 font-normal">Trustee & Treasury Management</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2.5">
+        <button onclick="app.lockApp()" id="header-lock-btn" title="Lock App" class="p-2 rounded-xl bg-emerald-900/70 hover:bg-emerald-850 active:scale-95 border border-emerald-800/80 text-ivory-200 hover:text-gold-400 transition-all">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= MAIN WORKSPACE ================= -->
+  <div class="flex flex-1 max-w-7xl w-full mx-auto pb-24 md:pb-8">
+    
+    <!-- DESKTOP SIDEBAR -->
+    <aside class="hidden md:flex flex-col w-64 bg-[#FBF8F2] border-r border-ivory-200/80 p-5 shrink-0 min-h-[calc(100vh-65px)]">
+      <div class="space-y-2 mb-6">
+        <button onclick="app.openTransactionModal('INCOME')" class="w-full py-2.5 px-4 rounded-xl bg-emerald-800 hover:bg-emerald-700 active:scale-98 text-white font-semibold text-xs tracking-wide shadow-sm flex items-center justify-center gap-2 border border-emerald-700/60 transition-all">
+          <svg class="w-4 h-4 text-emerald-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+          Record Income
+        </button>
+        <button onclick="app.openTransactionModal('EXPENSE')" class="w-full py-2.5 px-4 rounded-xl bg-white hover:bg-ivory-100 active:scale-98 text-charcoal-900 font-semibold text-xs tracking-wide shadow-2xs border border-ivory-300 flex items-center justify-center gap-2 transition-all">
+          <svg class="w-4 h-4 text-rose-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+          Record Expense
+        </button>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="space-y-1 flex-1">
+        <button onclick="app.navigate('dashboard')" id="nav-d-dashboard" class="nav-desktop-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold bg-emerald-950 text-ivory-50 shadow-xs">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+          Dashboard
+        </button>
+        <button onclick="app.navigate('transactions')" id="nav-d-transactions" class="nav-desktop-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-gray-700 hover:bg-ivory-200/60 hover:text-gray-900 transition-colors">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          Financial Ledger
+        </button>
+        <button onclick="app.navigate('committee')" id="nav-d-committee" class="nav-desktop-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-gray-700 hover:bg-ivory-200/60 hover:text-gray-900 transition-colors">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+          Committee Members
+        </button>
+        <button onclick="app.navigate('reports')" id="nav-d-reports" class="nav-desktop-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-gray-700 hover:bg-ivory-200/60 hover:text-gray-900 transition-colors">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+          Audit & Reports
+        </button>
+        <button onclick="app.navigate('accounts')" id="nav-d-accounts" class="nav-desktop-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-gray-700 hover:bg-ivory-200/60 hover:text-gray-900 transition-colors">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+          Bank & Cash Accounts
+        </button>
+        <button onclick="app.navigate('settings')" id="nav-d-settings" class="nav-desktop-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-gray-700 hover:bg-ivory-200/60 hover:text-gray-900 transition-colors">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+          Settings & Backup
+        </button>
+      </nav>
+
+      <div class="p-3.5 bg-white rounded-2xl border border-ivory-200/90 text-xs text-charcoal-800">
+        <div class="flex items-center gap-2 mb-1 text-emerald-800 font-semibold">
+          <svg class="w-4 h-4 text-gold-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span>Verified Local Ledger</span>
+        </div>
+        <p class="text-[11px] text-gray-500 leading-relaxed">IndexedDB cryptographic local store active.</p>
+      </div>
+    </aside>
+
+    <!-- MAIN VIEWPORT CONTENT -->
+    <main class="flex-1 p-4 sm:p-6 lg:p-8 max-w-5xl overflow-x-hidden">
+      
+      <!-- Mobile Quick Actions -->
+      <div class="grid grid-cols-2 gap-2.5 mb-5 md:hidden">
+        <button onclick="app.openTransactionModal('INCOME')" class="py-3 px-4 rounded-xl bg-emerald-800 active:bg-emerald-900 text-white font-semibold text-xs shadow-xs flex items-center justify-center gap-2 border border-emerald-700/50">
+          <svg class="w-4 h-4 text-emerald-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+          + Income
+        </button>
+        <button onclick="app.openTransactionModal('EXPENSE')" class="py-3 px-4 rounded-xl bg-white active:bg-ivory-100 text-charcoal-900 font-semibold text-xs shadow-xs border border-ivory-300 flex items-center justify-center gap-2">
+          <svg class="w-4 h-4 text-rose-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+          + Expense
+        </button>
+      </div>
+
+      <!-- ================= VIEW: DASHBOARD ================= -->
+      <section id="view-dashboard" class="space-y-6 view-enter">
+        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-950 via-emerald-900 to-emerald-950 text-ivory-50 p-6 sm:p-8 shadow-md border border-emerald-850">
+          <div class="absolute -right-12 -bottom-12 w-64 h-64 rounded-full bg-gold-500/5 pointer-events-none blur-2xl"></div>
+          
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <span class="text-xs font-semibold uppercase tracking-widest text-gold-400">Total Net Treasury Balance</span>
+              <div id="dash-total-balance" class="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white mt-1 tabular-nums">₹0.00</div>
+              <p class="text-xs text-ivory-300/80 mt-1 font-normal">Reconciled across all cash boxes & bank holdings</p>
+            </div>
+            
+            <button onclick="app.openTransferModal()" class="self-start sm:self-center px-4 py-2.5 rounded-xl bg-emerald-850/80 hover:bg-emerald-800 border border-emerald-700/60 text-xs font-medium text-ivory-100 flex items-center gap-2 transition-all">
+              <svg class="w-4 h-4 text-gold-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
+              Transfer Funds
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6 pt-6 border-t border-emerald-850/80">
+            <div class="bg-emerald-900/40 rounded-2xl p-3.5 border border-emerald-800/40">
+              <span class="text-[11px] font-medium text-emerald-300">This Month's Inflow</span>
+              <div id="dash-month-income" class="text-xl font-bold text-white mt-0.5 tabular-nums">₹0.00</div>
+            </div>
+            <div class="bg-emerald-900/40 rounded-2xl p-3.5 border border-emerald-800/40">
+              <span class="text-[11px] font-medium text-rose-300">This Month's Outflow</span>
+              <div id="dash-month-expense" class="text-xl font-bold text-white mt-0.5 tabular-nums">₹0.00</div>
+            </div>
+            <div class="bg-emerald-900/40 rounded-2xl p-3.5 border border-emerald-800/40">
+              <span class="text-[11px] font-medium text-gold-300">Net Monthly Savings</span>
+              <div id="dash-month-net" class="text-xl font-bold text-white mt-0.5 tabular-nums">₹0.00</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="card-surface p-5 sm:p-6 rounded-3xl lg:col-span-1">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-semibold text-charcoal-900 text-sm">Major Expenses</h3>
+              <button onclick="app.navigate('reports')" class="text-xs text-emerald-800 font-semibold hover:underline">Details</button>
+            </div>
+            <div id="dash-category-breakdown" class="space-y-3.5">
+              <p class="text-xs text-gray-400 py-6 text-center">No expense activity recorded yet.</p>
+            </div>
+          </div>
+
+          <div class="card-surface p-5 sm:p-6 rounded-3xl lg:col-span-2">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h3 class="font-semibold text-charcoal-900 text-sm">Recent Ledger Activity</h3>
+                <p class="text-xs text-gray-500 mt-0.5">Real-time persistent entries</p>
+              </div>
+              <button onclick="app.navigate('transactions')" class="text-xs text-emerald-800 font-semibold hover:underline flex items-center gap-1">
+                Full Ledger →
+              </button>
+            </div>
+            <div id="dash-recent-list" class="divide-y divide-ivory-200">
+              <p class="text-xs text-gray-400 py-10 text-center">No ledger entries yet. Tap Record Income/Expense to start.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= VIEW: TRANSACTIONS LEDGER ================= -->
+      <section id="view-transactions" class="space-y-4 hidden view-enter">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <div>
+            <h2 class="text-xl font-serif-islamic font-bold text-charcoal-900">Financial Ledger</h2>
+            <p class="text-xs text-gray-500">Filter, search, inspect attached receipts, and export statements</p>
+          </div>
+          <button onclick="app.exportCSV()" class="px-3.5 py-2 rounded-xl bg-white border border-ivory-300 text-xs font-semibold text-charcoal-900 hover:bg-ivory-100 flex items-center gap-2 shadow-2xs">
+            <svg class="w-4 h-4 text-emerald-800" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export CSV
+          </button>
+        </div>
+
+        <div class="card-surface p-3 sm:p-4 rounded-2xl flex flex-col sm:flex-row gap-2">
+          <div class="relative flex-1">
+            <svg class="w-4 h-4 absolute left-3 top-2.5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="filter-search" oninput="app.renderTransactions()" placeholder="Search description, donor, voucher..." class="w-full pl-9 pr-3 py-2 bg-ivory-50 border border-ivory-300 rounded-xl text-xs focus:outline-none focus:border-emerald-800 focus:bg-white transition-colors" />
+          </div>
+          
+          <div class="flex gap-2">
+            <select id="filter-type" onchange="app.renderTransactions()" class="px-3 py-2 bg-ivory-50 border border-ivory-300 rounded-xl text-xs text-charcoal-900 focus:outline-none focus:border-emerald-800">
+              <option value="ALL">All Flows</option>
+              <option value="INCOME">Income Only</option>
+              <option value="EXPENSE">Expense Only</option>
+            </select>
+            <select id="filter-category" onchange="app.renderTransactions()" class="px-3 py-2 bg-ivory-50 border border-ivory-300 rounded-xl text-xs text-charcoal-900 focus:outline-none focus:border-emerald-800">
+              <option value="ALL">All Categories</option>
+            </select>
+            <select id="filter-account" onchange="app.renderTransactions()" class="px-3 py-2 bg-ivory-50 border border-ivory-300 rounded-xl text-xs text-charcoal-900 focus:outline-none focus:border-emerald-800">
+              <option value="ALL">All Accounts</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="card-surface rounded-2xl overflow-hidden shadow-2xs">
+          <div id="ledger-list" class="divide-y divide-ivory-200"></div>
+        </div>
+      </section>
+
+      <!-- ================= VIEW: COMMITTEE MEMBERS ================= -->
+      <section id="view-committee" class="space-y-6 hidden view-enter">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <div>
+            <h2 class="text-xl font-serif-islamic font-bold text-charcoal-900">Management Committee & Trustees</h2>
+            <p class="text-xs text-gray-500">Official leadership directory, designated portfolios, and executive signatories</p>
+          </div>
+          <button onclick="app.openMemberModal()" class="px-4 py-2.5 bg-emerald-800 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center gap-2 transition-all">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Member
+          </button>
+        </div>
+
+        <div id="committee-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+      </section>
+
+      <!-- ================= VIEW: REPORTS & AUDIT ================= -->
+      <section id="view-reports" class="space-y-6 hidden view-enter">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <div>
+            <h2 class="text-xl font-serif-islamic font-bold text-charcoal-900">Financial Reports & Statements</h2>
+            <p class="text-xs text-gray-500">Official monthly summary and committee presentation document</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="month" id="report-month-select" onchange="app.renderReports()" class="text-xs font-semibold px-3 py-2 bg-white border border-ivory-300 rounded-xl focus:outline-none focus:border-emerald-800" />
+            <button onclick="window.print()" class="px-4 py-2 bg-emerald-800 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center gap-2 transition-all">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+              Print Statement
+            </button>
+          </div>
+        </div>
+
+        <div id="printable-report" class="card-surface p-6 sm:p-10 rounded-3xl space-y-6">
+          <div class="text-center border-b border-ivory-300 pb-5">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-950 text-gold-400 font-serif-islamic font-bold text-2xl flex items-center justify-center mx-auto mb-2 border border-gold-500/30">
+              م
+            </div>
+            <h2 id="report-masjid-title" class="text-2xl font-serif-islamic font-bold text-charcoal-950">Markaz Masjid</h2>
+            <p id="report-period-title" class="text-sm font-semibold text-charcoal-800 mt-0.5">Monthly Financial Statement</p>
+            <p class="text-xs text-gray-500">Generated from persistent offline ledger records</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="p-4 rounded-2xl bg-ivory-50 border border-ivory-200 text-center">
+              <span class="text-xs text-gray-500 font-semibold uppercase tracking-wider">Total Income</span>
+              <div id="rep-income" class="text-2xl font-bold text-emerald-800 tabular-nums mt-1">₹0.00</div>
+            </div>
+            <div class="p-4 rounded-2xl bg-ivory-50 border border-ivory-200 text-center">
+              <span class="text-xs text-gray-500 font-semibold uppercase tracking-wider">Total Expenses</span>
+              <div id="rep-expense" class="text-2xl font-bold text-rose-700 tabular-nums mt-1">₹0.00</div>
+            </div>
+            <div class="p-4 rounded-2xl bg-ivory-50 border border-ivory-200 text-center">
+              <span class="text-xs text-gray-500 font-semibold uppercase tracking-wider">Net Monthly Balance</span>
+              <div id="rep-net" class="text-2xl font-bold tabular-nums mt-1">₹0.00</div>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="text-xs font-bold text-charcoal-900 uppercase tracking-wider mb-3">Itemized Expense Categories</h3>
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="bg-ivory-100/70 border-b border-ivory-300">
+                  <th class="p-3 font-bold text-charcoal-900">Category</th>
+                  <th class="p-3 font-bold text-charcoal-900 text-right">Amount</th>
+                  <th class="p-3 font-bold text-charcoal-900 text-right">% of Total</th>
+                </tr>
+              </thead>
+              <tbody id="rep-category-table" class="divide-y divide-ivory-200"></tbody>
+            </table>
+          </div>
+
+          <!-- Dynamic Signatories Table -->
+          <div id="report-sign-area" class="pt-12 mt-8 border-t border-ivory-300 grid grid-cols-3 gap-6 text-center text-xs text-charcoal-800"></div>
+        </div>
+      </section>
+
+      <!-- ================= VIEW: ACCOUNTS ================= -->
+      <section id="view-accounts" class="space-y-6 hidden view-enter">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <div>
+            <h2 class="text-xl font-serif-islamic font-bold text-charcoal-900">Cash & Bank Accounts</h2>
+            <p class="text-xs text-gray-500">Manage physical cash boxes, bank deposits, and inter-fund transfers</p>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="app.openTransferModal()" class="px-3.5 py-2 bg-white border border-ivory-300 rounded-xl text-xs font-semibold text-charcoal-900 hover:bg-ivory-100 flex items-center gap-1.5 shadow-2xs">
+              <svg class="w-4 h-4 text-emerald-800" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
+              Transfer Funds
+            </button>
+            <button onclick="app.openAddAccountModal()" class="px-3.5 py-2 bg-emerald-800 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center gap-1.5 transition-all">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add Account
+            </button>
+          </div>
+        </div>
+
+        <div id="accounts-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+      </section>
+
+      <!-- ================= VIEW: SETTINGS & BACKUP ================= -->
+      <section id="view-settings" class="space-y-6 hidden view-enter max-w-3xl">
+        <div>
+          <h2 class="text-xl font-serif-islamic font-bold text-charcoal-900">Masjid Configuration</h2>
+          <p class="text-xs text-gray-500">Identity details, security PIN, custom ledger categories, and database backup</p>
+        </div>
+
+        <!-- Identity -->
+        <div class="card-surface p-5 sm:p-6 rounded-3xl space-y-4">
+          <h3 class="font-semibold text-charcoal-900 text-sm flex items-center gap-2">
+            <svg class="w-4 h-4 text-emerald-800" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Masjid Identity & Currency
+          </h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div>
+              <label class="block text-xs font-semibold text-charcoal-800 mb-1">Masjid Name</label>
+              <input type="text" id="set-masjid-name" class="w-full p-2.5 bg-ivory-50 border border-ivory-300 rounded-xl text-xs focus:outline-none focus:border-emerald-800 focus:bg-white" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-charcoal-800 mb-1">Location / Tagline</label>
+              <input type="text" id="set-tagline" class="w-full p-2.5 bg-ivory-50 border border-ivory-300 rounded-xl text-xs focus:outline-none focus:border-emerald-800 focus:bg-white" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-charcoal-800 mb-1">Currency Symbol</label>
+              <input type="text" id="set-currency" class="w-full p-2.5 bg-ivory-50 border border-ivory-300 rounded-xl text-xs focus:outline-none focus:border-emerald-800 focus:bg-white" />
+            </div>
+          </div>
+          <button onclick="app.saveProfileSettings()" class="px-4 py-2 bg-emerald-800 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-2xs transition-all">
+            Save Changes
+          </button>
+        </div>
+
+        <!-- Security -->
+        <div class="card-surface p-5 sm:p-6 rounded-3xl space-y-4">
+          <h3 class="font-semibold text-charcoal-900 text-sm flex items-center gap-2">
+            <svg class="w-4 h-4 text-emerald-800" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            App PIN Lock Security
+          </h3>
+          <label class="flex items-center gap-2 text-xs font-medium text-charcoal-800 cursor-pointer">
+            <input type="checkbox" id="set-pin-enabled" class="w-4 h-4 rounded text-emerald-800 accent-emerald-800" />
+            Require 4-digit PIN when opening app
+          </label>
+          <div id="pin-setup-box" class="space-y-2">
+            <label class="block text-xs font-semibold text-charcoal-800">Set 4-Digit Security PIN</label>
+            <input type="password" maxlength="4" id="set-pin-value" placeholder="••••" class="p-2.5 bg-ivory-50 border border-ivory-300 rounded-xl text-sm font-bold tracking-widest text-center max-w-xs focus:outline-none focus:border-emerald-800 focus:bg-white" />
+          </div>
+          <button onclick="app.savePinSettings()" class="px-4 py-2 bg-emerald-800 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-2xs transition-all">
+            Update Security
+          </button>
+        </div>
+
+        <!-- Custom Categories -->
+        <div class="card-surface p-5 sm:p-6 rounded-3xl space-y-4">
+          <h3 class="font-semibold text-charcoal-900 text-sm flex items-center gap-2">
+            <svg class="w-4 h-4 text-emerald-800" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+            Custom Ledger Categories
+          </h3>
+          <div class="flex gap-2">
+            <input type="text" id="new-cat-name" placeholder="Category name..." class="flex-1 p-2 bg-ivory-50 border border-ivory-300 rounded-xl text-xs focus:outline-none focus:border-emerald-800" />
+            <select id="new-cat-type" class="p-2 bg-ivory-50 border border-ivory-300 rounded-xl text-xs focus:outline-none focus:border-emerald-800">
+              <option value="EXPENSE">Expense</option>
+              <option value="INCOME">Income</option>
+            </select>
+            <button onclick="app.addCategory()" class="px-4 py-2 bg-emerald-800 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-2xs">+ Add</button>
+          </div>
+          <div id="categories-pill-list" class="flex flex-wrap gap-2 max-h-48 overflow-y-auto pt-1"></div>
+        </div>
+
+        <!-- Backup & Restoration -->
+        <div class="card-surface p-5 sm:p-6 rounded-3xl border-l-4 border-l-gold-500 space-y-3">
+          <h3 class="font-semibold text-charcoal-900 text-sm flex items-center gap-2">
+            <svg class="w-4 h-4 text-gold-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Database Backup & Recovery
+          </h3>
+          <p class="text-xs text-gray-500">Safely backup or restore your complete financial ledger and committee profiles as a JSON file.</p>
+          <div class="flex flex-wrap gap-3 pt-2">
+            <button onclick="app.exportBackup()" class="px-4 py-2.5 bg-ivory-100 hover:bg-ivory-200 text-charcoal-900 border border-ivory-300 rounded-xl text-xs font-semibold shadow-2xs flex items-center gap-2 transition-all">
+              <svg class="w-4 h-4 text-emerald-800" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export JSON Backup
+            </button>
+            <label class="px-4 py-2.5 bg-white hover:bg-ivory-50 border border-emerald-800 text-emerald-900 rounded-xl text-xs font-semibold shadow-2xs flex items-center gap-2 cursor-pointer transition-all">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Restore from JSON
+              <input type="file" accept=".json" onchange="app.importBackup(event)" class="hidden" />
+            </label>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ================= MOBILE BOTTOM NAVIGATION ================= -->
+  <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-ivory-300/80 py-2 px-3 z-30 shadow-lg flex justify-around items-center">
+    <button onclick="app.navigate('dashboard')" id="nav-m-dashboard" class="flex flex-col items-center gap-0.5 text-emerald-800 font-bold transition-all">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+      <span class="text-[10px]">Dashboard</span>
+    </button>
+    <button onclick="app.navigate('transactions')" id="nav-m-transactions" class="flex flex-col items-center gap-0.5 text-gray-500 transition-all">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <span class="text-[10px]">Ledger</span>
+    </button>
+    <button onclick="app.navigate('committee')" id="nav-m-committee" class="flex flex-col items-center gap-0.5 text-gray-500 transition-all">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      <span class="text-[10px]">Committee</span>
+    </button>
+    <button onclick="app.navigate('reports')" id="nav-m-reports" class="flex flex-col items-center gap-0.5 text-gray-500 transition-all">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+      <span class="text-[10px]">Reports</span>
+    </button>
+    <button onclick="app.navigate('accounts')" id="nav-m-accounts" class="flex flex-col items-center gap-0.5 text-gray-500 transition-all">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+      <span class="text-[10px]">Accounts</span>
+    </button>
+    <button onclick="app.navigate('settings')" id="nav-m-settings" class="flex flex-col items-center gap-0.5 text-gray-500 transition-all">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      <span class="text-[10px]">Settings</span>
+    </button>
+  </nav>
+
+  <!-- ================= TRANSACTION ENTRY MODAL ================= -->
+  <div id="modal-transaction" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+    <div class="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[92vh] flex flex-col overflow-hidden animate-in">
+      <div class="p-4 sm:p-5 border-b border-ivory-200 flex justify-between items-center bg-ivory-50">
+        <div class="flex rounded-xl bg-ivory-200/80 p-1 border border-ivory-300">
+          <button type="button" id="btn-type-income" onclick="app.setTxType('INCOME')" class="px-4 py-1.5 text-xs font-bold rounded-lg bg-emerald-800 text-white transition-all shadow-2xs">
+            + Income
+          </button>
+          <button type="button" id="btn-type-expense" onclick="app.setTxType('EXPENSE')" class="px-4 py-1.5 text-xs font-bold rounded-lg text-charcoal-800 transition-all">
+            - Expense
+          </button>
+        </div>
+        <button onclick="app.closeModal('modal-transaction')" class="p-1 text-gray-400 hover:text-gray-700 rounded-lg">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <form onsubmit="app.saveTransaction(event)" class="p-5 sm:p-6 overflow-y-auto space-y-4 flex-1">
+        <input type="hidden" id="tx-edit-id" />
+        
+        <div>
+          <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Amount *</label>
+          <div class="relative">
+            <span class="absolute left-4 top-3.5 text-xl font-bold text-gray-400" id="tx-currency-symbol">₹</span>
+            <input type="number" step="any" required id="tx-amount" placeholder="0.00" class="w-full text-2xl font-bold pl-10 pr-4 py-3 bg-ivory-50 border border-ivory-300 rounded-2xl focus:border-emerald-800 focus:bg-white focus:outline-none transition-colors tabular-nums" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Date *</label>
+            <input type="date" required id="tx-date" class="w-full text-xs px-3 py-2.5 bg-ivory-50 border border-ivory-300 rounded-xl focus:border-emerald-800 focus:bg-white focus:outline-none" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Account *</label>
+            <select id="tx-account" class="w-full text-xs px-3 py-2.5 bg-ivory-50 border border-ivory-300 rounded-xl focus:border-emerald-800 focus:bg-white focus:outline-none"></select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Category *</label>
+          <select id="tx-category" class="w-full text-xs px-3 py-2.5 bg-ivory-50 border border-ivory-300 rounded-xl focus:border-emerald-800 focus:bg-white focus:outline-none"></select>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1" id="tx-desc-label">Description</label>
+            <input type="text" id="tx-description" placeholder="e.g. Electricity bill, Jumuah Chanda" class="w-full text-xs px-3 py-2.5 bg-ivory-50 border border-ivory-300 rounded-xl focus:border-emerald-800 focus:bg-white focus:outline-none" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1" id="tx-person-label">Donor Name / Paid To</label>
+            <input type="text" id="tx-person" placeholder="Optional" class="w-full text-xs px-3 py-2.5 bg-ivory-50 border border-ivory-300 rounded-xl focus:border-emerald-800 focus:bg-white focus:outline-none" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Payment Method</label>
+          <select id="tx-method" class="w-full text-xs px-3 py-2.5 bg-ivory-50 border border-ivory-300 rounded-xl focus:border-emerald-800 focus:bg-white focus:outline-none">
+            <option value="CASH">Cash</option>
+            <option value="UPI">UPI / Digital QR</option>
+            <option value="BANK_TRANSFER">Bank Transfer / NEFT</option>
+            <option value="CHEQUE">Cheque</option>
+          </select>
+        </div>
+
+        <!-- Receipt Attachment -->
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Receipt / Voucher Photo (Optional)</label>
+          <div id="receipt-preview-box" class="hidden relative mb-2 rounded-2xl overflow-hidden border border-ivory-300 max-h-44 bg-ivory-50">
+            <img id="receipt-preview-img" class="w-full h-40 object-cover" />
+            <button type="button" onclick="app.removeReceiptPhoto()" class="absolute top-2 right-2 bg-rose-700 text-white rounded-xl px-2.5 py-1 text-xs font-semibold shadow flex items-center gap-1">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              Remove
+            </button>
+          </div>
+          <input type="file" id="tx-receipt-file" accept="image/*" capture="environment" onchange="app.handleReceiptUpload(event)" class="text-xs w-full text-gray-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-ivory-200 file:text-charcoal-900 hover:file:bg-ivory-300" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Internal Audit Notes</label>
+          <input type="text" id="tx-notes" placeholder="Voucher reference or committee approval note..." class="w-full text-xs px-3 py-2 bg-ivory-50 border border-ivory-300 rounded-xl focus:border-emerald-800 focus:bg-white focus:outline-none" />
+        </div>
+
+        <div class="pt-2 flex gap-3">
+          <button type="button" onclick="app.closeModal('modal-transaction')" class="flex-1 py-3 rounded-xl bg-ivory-200 text-charcoal-900 font-bold text-xs hover:bg-ivory-300 transition-colors">Cancel</button>
+          <button type="submit" class="flex-1 py-3 rounded-xl bg-emerald-800 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition-all">Save Entry</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= COMMITTEE MEMBER MODAL ================= -->
+  <div id="modal-member" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-white w-full max-w-lg rounded-3xl p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+      <div class="flex justify-between items-center pb-2 border-b border-ivory-200">
+        <h3 id="member-modal-title" class="font-serif-islamic font-bold text-lg text-charcoal-900">Add Committee Member</h3>
+        <button onclick="app.closeModal('modal-member')" class="text-gray-400 hover:text-gray-700">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <form onsubmit="app.saveMember(event)" class="space-y-3.5">
+        <input type="hidden" id="mem-edit-id" />
+        
+        <!-- Portrait Photo Upload Area -->
+        <div class="flex flex-col sm:flex-row items-center gap-4 bg-ivory-50 p-3.5 rounded-2xl border border-ivory-300">
+          <div class="relative w-20 h-20 rounded-2xl overflow-hidden bg-ivory-200 border border-ivory-300 shrink-0 flex items-center justify-center">
+            <img id="mem-photo-preview" class="w-full h-full object-cover hidden" />
+            <div id="mem-photo-placeholder" class="text-gray-400 flex flex-col items-center">
+              <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+          </div>
+          <div class="space-y-1.5 text-center sm:text-left flex-1">
+            <label class="block text-xs font-bold text-charcoal-900">Member Portrait Photo</label>
+            <p class="text-[11px] text-gray-500">JPG, PNG or WEBP (automatically compressed)</p>
+            <div class="flex flex-wrap gap-2 pt-1 justify-center sm:justify-start">
+              <label class="px-3 py-1.5 bg-white border border-ivory-300 rounded-xl text-xs font-semibold text-charcoal-900 hover:bg-ivory-100 cursor-pointer shadow-2xs">
+                Upload Photo
+                <input type="file" id="mem-photo-file" accept="image/*" onchange="app.handleMemberPhotoUpload(event)" class="hidden" />
+              </label>
+              <button type="button" id="mem-photo-remove-btn" onclick="app.removeMemberPhoto()" class="px-3 py-1.5 bg-rose-50 text-rose-700 rounded-xl text-xs font-semibold hover:bg-rose-100 hidden">
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-charcoal-800 mb-1">Full Name *</label>
+          <input type="text" required id="mem-name" placeholder="e.g. Haji Mohammed Usman" class="w-full text-xs p-2.5 bg-ivory-50 border border-ivory-300 rounded-xl focus:border-emerald-800 focus:bg-white focus:outline-none" />
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-charcoal-800 mb-1">Designation / Role *</label>
+            <select id="mem-role" class="w-full text-xs p-2.5 bg-ivory-50 border border-ivory-300 rounded-xl focus:border-emerald-800 focus:bg-white focus:outline-none">
+              <option value="President / Mutawalli">President / Mutawalli</option>
+              <option value="Vice President">Vice President</option>
+              <option value="General Secretary">General Secretary</option>
+              <option value="Joint Secretary">Joint Secretary</option>
+              <option value="Treasurer / Khazanchi">Treasurer / Khazanchi</option>
+              <option value="Executive Member">Executive Member</option>
+              <option value="Advisor / Patron">Advisor / Patron</option>
+              <option value="Imam / Religious Advisor">Imam / Religious Advisor</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-charcoal-800 mb-1">Phone Number</label>
+            <input type="tel" id="mem-phone" placeholder="e.g. +91 98765 43210" class="w-full text-xs p-2.5 bg-ivory-50 border border-ivory-300 rounded-xl focus:border-emerald-800 focus:bg-white focus:outline-none" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-charcoal-800 mb-1">Tenure / Term</label>
+            <input type="text" id="mem-term" placeholder="e.g. 2024 – 2027" class="w-full text-xs p-2.5 bg-ivory-50 border border-ivory-300 rounded-xl focus:border-emerald-800 focus:bg-white focus:outline-none" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-charcoal-800 mb-1">Membership Status</label>
+            <select id="mem-status" class="w-full text-xs p-2.5 bg-ivory-50 border border-ivory-300 rounded-xl focus:border-emerald-800 focus:bg-white focus:outline-none">
+              <option value="Active">Active Trustee</option>
+              <option value="Former">Former / Inactive</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-charcoal-800 mb-1">Address / Locality</label>
+          <input type="text" id="mem-address" placeholder="e.g. Main Bazaar Road, North Mohalla" class="w-full text-xs p-2.5 bg-ivory-50 border border-ivory-300 rounded-xl focus:border-emerald-800 focus:bg-white focus:outline-none" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-charcoal-800 mb-1">Portfolios & Notes</label>
+          <input type="text" id="mem-notes" placeholder="e.g. Construction sub-committee lead" class="w-full text-xs p-2.5 bg-ivory-50 border border-ivory-300 rounded-xl focus:border-emerald-800 focus:bg-white focus:outline-none" />
+        </div>
+
+        <div class="pt-2 flex gap-2">
+          <button type="button" onclick="app.closeModal('modal-member')" class="flex-1 py-2.5 bg-ivory-200 text-charcoal-900 text-xs font-bold rounded-xl hover:bg-ivory-300 transition-colors">Cancel</button>
+          <button type="submit" class="flex-1 py-2.5 bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition-all">Save Member Profile</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= TRANSFER MODAL ================= -->
+  <div id="modal-transfer" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl space-y-4">
+      <div class="flex justify-between items-center pb-2 border-b border-ivory-200">
+        <h3 class="font-serif-islamic font-bold text-lg text-charcoal-900">Inter-Account Transfer</h3>
+        <button onclick="app.closeModal('modal-transfer')" class="text-gray-400 hover:text-gray-700">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <form onsubmit="app.executeTransfer(event)" class="space-y-3.5">
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-1">Transfer Amount *</label>
+          <input type="number" step="any" required id="tr-amount" placeholder="0.00" class="w-full text-xl font-bold p-3 bg-ivory-50 border border-ivory-300 rounded-xl focus:border-emerald-800 focus:bg-white focus:outline-none tabular-nums" />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">From Account</label>
+            <select id="tr-from-acc" class="w-full text-xs p-2.5 bg-ivory-50 border border-ivory-300 rounded-xl focus:border-emerald-800 focus:bg-white focus:outline-none"></select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">To Account</label>
+            <select id="tr-to-acc" class="w-full text-xs p-2.5 bg-ivory-50 border border-ivory-300 rounded-xl focus:border-emerald-800 focus:bg-white focus:outline-none"></select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Date</label>
+          <input type="date" required id="tr-date" class="w-full text-xs p-2.5 bg-ivory-50 border border-ivory-300 rounded-xl focus:border-emerald-800 focus:bg-white focus:outline-none" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Notes</label>
+          <input type="text" id="tr-notes" placeholder="e.g. Bank cash deposit from Friday box" class="w-full text-xs p-2.5 bg-ivory-50 border border-ivory-300 rounded-xl focus:border-emerald-800 focus:bg-white focus:outline-none" />
+        </div>
+        <div class="pt-2 flex gap-2">
+          <button type="button" onclick="app.closeModal('modal-transfer')" class="flex-1 py-2.5 bg-ivory-200 text-charcoal-900 text-xs font-bold rounded-xl hover:bg-ivory-300 transition-colors">Cancel</button>
+          <button type="submit" class="flex-1 py-2.5 bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition-all">Execute Transfer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= ADD ACCOUNT MODAL ================= -->
+  <div id="modal-add-account" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl space-y-4">
+      <div class="flex justify-between items-center pb-2 border-b border-ivory-200">
+        <h3 class="font-serif-islamic font-bold text-lg text-charcoal-900">Add Cash / Bank Account</h3>
+        <button onclick="app.closeModal('modal-add-account')" class="text-gray-400 hover:text-gray-700">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <form onsubmit="app.saveNewAccount(event)" class="space-y-3.5">
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-1">Account Name *</label>
+          <input type="text" required id="new-acc-name" placeholder="e.g. HDFC Bank, Construction Fund" class="w-full text-xs p-2.5 bg-ivory-50 border border-ivory-300 rounded-xl focus:border-emerald-800 focus:bg-white focus:outline-none" />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Account Type</label>
+            <select id="new-acc-type" class="w-full text-xs p-2.5 bg-ivory-50 border border-ivory-300 rounded-xl focus:border-emerald-800 focus:bg-white focus:outline-none">
+              <option value="BANK">Bank Account</option>
+              <option value="CASH">Physical Cash Box</option>
+              <option value="RESERVE">Reserve Endowment</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Opening Balance</label>
+            <input type="number" step="any" id="new-acc-opening" placeholder="0.00" class="w-full text-xs p-2.5 bg-ivory-50 border border-ivory-300 rounded-xl focus:border-emerald-800 focus:bg-white focus:outline-none tabular-nums" />
+          </div>
+        </div>
+        <div class="pt-2 flex gap-2">
+          <button type="button" onclick="app.closeModal('modal-add-account')" class="flex-1 py-2.5 bg-ivory-200 text-charcoal-900 text-xs font-bold rounded-xl hover:bg-ivory-300 transition-colors">Cancel</button>
+          <button type="submit" class="flex-1 py-2.5 bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition-all">Save Account</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= JAVASCRIPT APPLICATION CORE ================= -->
+  <script>
+    const DB_NAME = 'MasjidLedgerStandaloneDB';
+    const DB_VERSION = 2;
+
+    const DEFAULT_CATEGORIES = [
+      { id: 'cat-1', name: 'Imam & Muazzin Salary', type: 'EXPENSE', isDefault: true },
+      { id: 'cat-2', name: 'Electricity Bill', type: 'EXPENSE', isDefault: true },
+      { id: 'cat-3', name: 'Water & Sanitation', type: 'EXPENSE', isDefault: true },
+      { id: 'cat-4', name: 'Building Maintenance & Repairs', type: 'EXPENSE', isDefault: true },
+      { id: 'cat-5', name: 'Cleaning & Supplies', type: 'EXPENSE', isDefault: true },
+      { id: 'cat-6', name: 'Ramadan / Iftar Expenses', type: 'EXPENSE', isDefault: true },
+      { id: 'cat-7', name: 'Maktab / Islamic Education', type: 'EXPENSE', isDefault: true },
+      { id: 'cat-8', name: 'Charity & Welfare (Zakat/Sadaqah)', type: 'EXPENSE', isDefault: true },
+      { id: 'cat-9', name: 'Construction & Expansion', type: 'EXPENSE', isDefault: true },
+      { id: 'cat-10', name: 'Other Expenses', type: 'EXPENSE', isDefault: true },
+      { id: 'cat-11', name: 'Friday Box Collection (Jumuah Chanda)', type: 'INCOME', isDefault: true },
+      { id: 'cat-12', name: 'Monthly Member Subscriptions', type: 'INCOME', isDefault: true },
+      { id: 'cat-13', name: 'General Donations (Lillah)', type: 'INCOME', isDefault: true },
+      { id: 'cat-14', name: 'Zakat Fund Received', type: 'INCOME', isDefault: true },
+      { id: 'cat-15', name: 'Ramadan Special Donations', type: 'INCOME', isDefault: true },
+      { id: 'cat-16', name: 'Other Income', type: 'INCOME', isDefault: true }
+    ];
+
+    const DEFAULT_ACCOUNTS = [
+      { id: 'acc-1', name: 'Main Cash Box', type: 'CASH', openingBalanceCents: 0, isDefault: true },
+      { id: 'acc-2', name: 'Masjid SBI Bank Account', type: 'BANK', openingBalanceCents: 0, isDefault: false }
+    ];
+
+    const DEFAULT_COMMITTEE = [
+      { id: 'mem-1', name: 'Haji Mohammed Usman', role: 'President / Mutawalli', phone: '', term: '2024 – 2027', status: 'Active', address: 'Main Road', notes: 'Head of Trustee Board', photoBase64: null },
+      { id: 'mem-2', name: 'Janab Abdul Rahman', role: 'General Secretary', phone: '', term: '2024 – 2027', status: 'Active', address: 'Civil Lines', notes: 'Secretariat & Waqf Liaison', photoBase64: null },
+      { id: 'mem-3', name: 'Janab Tariq Mahmood', role: 'Treasurer / Khazanchi', phone: '', term: '2024 – 2027', status: 'Active', address: 'Bazaar Mohalla', notes: 'Treasury & Ledger Custodian', photoBase64: null }
+    ];
+
+    const DEFAULT_SETTINGS = {
+      masjidName: 'Markaz Masjid & Islamic Center',
+      tagline: 'Trustee & Treasury Management',
+      currencySymbol: '₹',
+      isPinLocked: false,
+      pinHash: null
+    };
+
+    class MasjidLedgerApp {
+      constructor() {
+        this.db = null;
+        this.state = {
+          currentTab: 'dashboard',
+          transactions: [],
+          accounts: [],
+          categories: [],
+          committee: [],
+          settings: DEFAULT_SETTINGS,
+          currentTxType: 'INCOME',
+          tempReceiptBase64: null,
+          tempMemberPhotoBase64: null,
+          enteredPin: ''
+        };
+      }
+
+      async init() {
+        await this.initIndexedDB();
+        await this.loadAllData();
+        this.checkPinLock();
+        this.setupDefaults();
+        this.renderAll();
+      }
+
+      initIndexedDB() {
+        return new Promise((resolve, reject) => {
+          const req = indexedDB.open(DB_NAME, DB_VERSION);
+          req.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains('transactions')) db.createObjectStore('transactions', { keyPath: 'id' });
+            if (!db.objectStoreNames.contains('accounts')) db.createObjectStore('accounts', { keyPath: 'id' });
+            if (!db.objectStoreNames.contains('categories')) db.createObjectStore('categories', { keyPath: 'id' });
+            if (!db.objectStoreNames.contains('settings')) db.createObjectStore('settings', { keyPath: 'id' });
+            if (!db.objectStoreNames.contains('committee')) db.createObjectStore('committee', { keyPath: 'id' });
+          };
+          req.onsuccess = (e) => {
+            this.db = e.target.result;
+            resolve();
+          };
+          req.onerror = (e) => reject(e);
+        });
+      }
+
+      async loadAllData() {
+        this.state.transactions = await this.getAllFromStore('transactions');
+        this.state.accounts = await this.getAllFromStore('accounts');
+        this.state.categories = await this.getAllFromStore('categories');
+        this.state.committee = await this.getAllFromStore('committee');
+        const settingsArr = await this.getAllFromStore('settings');
+        
+        if (settingsArr.length > 0) {
+          this.state.settings = settingsArr[0];
+        } else {
+          await this.putToStore('settings', { id: 'app_settings', ...DEFAULT_SETTINGS });
+          this.state.settings = { id: 'app_settings', ...DEFAULT_SETTINGS };
+        }
+
+        if (this.state.categories.length === 0) {
+          for (const c of DEFAULT_CATEGORIES) await this.putToStore('categories', c);
+          this.state.categories = DEFAULT_CATEGORIES;
+        }
+
+        if (this.state.accounts.length === 0) {
+          for (const a of DEFAULT_ACCOUNTS) await this.putToStore('accounts', a);
+          this.state.accounts = DEFAULT_ACCOUNTS;
+        }
+
+        if (this.state.committee.length === 0) {
+          for (const m of DEFAULT_COMMITTEE) await this.putToStore('committee', m);
+          this.state.committee = DEFAULT_COMMITTEE;
+        }
+      }
+
+      getAllFromStore(storeName) {
+        return new Promise((resolve) => {
+          const tx = this.db.transaction(storeName, 'readonly');
+          const store = tx.objectStore(storeName);
+          const req = store.getAll();
+          req.onsuccess = () => resolve(req.result || []);
+          req.onerror = () => resolve([]);
+        });
+      }
+
+      putToStore(storeName, item) {
+        return new Promise((resolve) => {
+          const tx = this.db.transaction(storeName, 'readwrite');
+          const store = tx.objectStore(storeName);
+          store.put(item);
+          tx.oncomplete = () => resolve();
+        });
+      }
+
+      deleteFromStore(storeName, id) {
+        return new Promise((resolve) => {
+          const tx = this.db.transaction(storeName, 'readwrite');
+          const store = tx.objectStore(storeName);
+          store.delete(id);
+          tx.oncomplete = () => resolve();
+        });
+      }
+
+      toast(message, type = 'success') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `p-3.5 rounded-2xl bg-charcoal-950 text-white text-xs font-semibold shadow-xl border border-white/10 flex items-center gap-2.5 pointer-events-auto transform transition-all duration-300 translate-y-2 opacity-0`;
+        
+        const iconSvg = type === 'success' 
+          ? `<svg class="w-4 h-4 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`
+          : `<svg class="w-4 h-4 text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`;
+
+        toast.innerHTML = `${iconSvg}<span>${message}</span>`;
+        container.appendChild(toast);
+
+        requestAnimationFrame(() => {
+          toast.classList.remove('translate-y-2', 'opacity-0');
+        });
+
+        setTimeout(() => {
+          toast.classList.add('translate-y-2', 'opacity-0');
+          setTimeout(() => toast.remove(), 300);
+        }, 3000);
+      }
+
+      toCents(val) {
+        const num = parseFloat(val);
+        return isNaN(num) ? 0 : Math.round(num * 100);
+      }
+
+      formatCurrency(cents, showSymbol = true) {
+        const sym = showSymbol ? (this.state.settings.currencySymbol || '₹') : '';
+        const val = (cents || 0) / 100;
+        const formatted = Math.abs(val).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        return (val < 0 ? '-' : '') + sym + formatted;
+      }
+
+      /* Pure JavaScript SHA-256 (Functions on HTTP, HTTPS, and LAN IPs without crypto.subtle) */
+      pureSha256(ascii) {
+        function rightRotate(value, amount) {
+          return (value >>> amount) | (value << (32 - amount));
+        }
+        var mathPow = Math.pow;
+        var maxWord = mathPow(2, 32);
+        var lengthProperty = 'length';
+        var i, j;
+        var result = '';
+        var words = [];
+        var asciiBitLength = ascii[lengthProperty] * 8;
+        var hash = [];
+        var k = [];
+        var primeCounter = 0;
+        var isComposite = {};
+        for (var candidate = 2; primeCounter < 64; candidate++) {
+          if (!isComposite[candidate]) {
+            for (i = 0; i < 300; i += candidate) {
+              isComposite[i] = candidate;
+            }
+            hash[primeCounter] = (mathPow(candidate, 0.5) * maxWord) | 0;
+            k[primeCounter++] = (mathPow(candidate, 1 / 3) * maxWord) | 0;
+          }
+        }
+        ascii += '\x80';
+        while ((ascii[lengthProperty] % 64) - 56) ascii += '\x00';
+        for (i = 0; i < ascii[lengthProperty]; i++) {
+          j = ascii.charCodeAt(i);
+          if (j >> 8) return '';
+          words[i >> 2] |= j << (((3 - i) % 4) * 8);
+        }
+        words[words[lengthProperty]] = (asciiBitLength / maxWord) | 0;
+        words[words[lengthProperty]] = asciiBitLength;
+        for (j = 0; j < words[lengthProperty]; ) {
+          var w = words.slice(j, (j += 16));
+          var oldHash = hash;
+          hash = hash.slice(0, 8);
+          for (i = 0; i < 64; i++) {
+            var w15 = w[i - 15], w2 = w[i - 2];
+            var a = hash[0], e = hash[4];
+            var temp1 =
+              hash[7] +
+              (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25)) +
+              ((e & hash[5]) ^ (~e & hash[6])) +
+              k[i] +
+              (w[i] =
+                i < 16
+                  ? w[i]
+                  : (w[i - 16] +
+                      (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3)) +
+                      w[i - 7] +
+                      (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))) |
+                    0);
+            var temp2 =
+              (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22)) +
+              ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
+            hash = [(temp1 + temp2) | 0].concat(hash);
+            hash[4] = (hash[4] + temp1) | 0;
+          }
+          for (i = 0; i < 8; i++) {
+            hash[i] = (hash[i] + oldHash[i]) | 0;
+          }
+        }
+        for (i = 0; i < 8; i++) {
+          for (j = 3; j >= 0; j--) {
+            var b = (hash[i] >> (j * 8)) & 255;
+            result += (b < 16 ? '0' : '') + b.toString(16);
+          }
+        }
+        return result;
+      }
+
+      async hashString(str) {
+        const salted = 'masjid_' + str;
+        if (typeof window !== 'undefined' && window.crypto && window.crypto.subtle && typeof window.crypto.subtle.digest === 'function') {
+          try {
+            const buffer = new TextEncoder().encode(salted);
+            const digest = await window.crypto.subtle.digest('SHA-256', buffer);
+            return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
+          } catch (err) {
+            // Fall through to pureSha256
+          }
+        }
+        return this.pureSha256(salted);
+      }
+
+      checkPinLock() {
+        if (this.state.settings.isPinLocked && this.state.settings.pinHash) {
+          document.getElementById('pin-lock-overlay').classList.remove('hidden');
+          document.getElementById('lock-masjid-title').innerText = this.state.settings.masjidName;
+        }
+      }
+
+      lockApp() {
+        if (this.state.settings.isPinLocked && this.state.settings.pinHash) {
+          this.state.enteredPin = '';
+          this.updatePinDots();
+          document.getElementById('pin-lock-overlay').classList.remove('hidden');
+        } else {
+          this.toast('Enable PIN Lock in Settings first', 'error');
+        }
+      }
+
+      async enterPin(digit) {
+        if (this.state.enteredPin.length < 4) {
+          this.state.enteredPin += digit;
+          this.updatePinDots();
+
+          if (this.state.enteredPin.length === 4) {
+            const h = await this.hashString(this.state.enteredPin);
+            if (h === this.state.settings.pinHash) {
+              document.getElementById('pin-lock-overlay').classList.add('hidden');
+              this.state.enteredPin = '';
+              this.toast('Unlocked successfully');
+            } else {
+              this.toast('Incorrect PIN', 'error');
+              this.state.enteredPin = '';
+              this.updatePinDots();
+            }
+          }
+        }
+      }
+
+      backspacePin() {
+        this.state.enteredPin = this.state.enteredPin.slice(0, -1);
+        this.updatePinDots();
+      }
+
+      updatePinDots() {
+        const dots = document.getElementById('pin-dots').children;
+        for (let i = 0; i < 4; i++) {
+          if (i < this.state.enteredPin.length) {
+            dots[i].className = 'w-3.5 h-3.5 rounded-full bg-gold-400 border border-gold-400 scale-110';
+          } else {
+            dots[i].className = 'w-3.5 h-3.5 rounded-full border border-ivory-300/30';
+          }
+        }
+      }
+
+      navigate(tabId) {
+        this.state.currentTab = tabId;
+        ['dashboard', 'transactions', 'reports', 'committee', 'accounts', 'settings'].forEach(t => {
+          const view = document.getElementById(`view-${t}`);
+          if (view) view.classList.add('hidden');
+          
+          const dNav = document.getElementById(`nav-d-${t}`);
+          if (dNav) dNav.className = 'nav-desktop-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-gray-700 hover:bg-ivory-200/60 hover:text-gray-900 transition-colors';
+          
+          const mNav = document.getElementById(`nav-m-${t}`);
+          if (mNav) mNav.className = 'flex flex-col items-center gap-0.5 text-gray-500 transition-all';
+        });
+
+        const activeView = document.getElementById(`view-${tabId}`);
+        if (activeView) {
+          activeView.classList.remove('hidden');
+          activeView.classList.remove('view-enter');
+          void activeView.offsetWidth;
+          activeView.classList.add('view-enter');
+        }
+
+        const activeD = document.getElementById(`nav-d-${tabId}`);
+        if (activeD) activeD.className = 'nav-desktop-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold bg-emerald-950 text-ivory-50 shadow-xs';
+        
+        const activeM = document.getElementById(`nav-m-${tabId}`);
+        if (activeM) activeM.className = 'flex flex-col items-center gap-0.5 text-emerald-800 font-bold transition-all';
+
+        this.renderAll();
+      }
+
+      setupDefaults() {
+        const now = new Date();
+        const monthStr = now.toISOString().slice(0, 7);
+        document.getElementById('report-month-select').value = monthStr;
+        document.getElementById('tx-date').value = now.toISOString().split('T')[0];
+        document.getElementById('tr-date').value = now.toISOString().split('T')[0];
+      }
+
+      getCalculations() {
+        const now = new Date();
+        const currentMonth = now.toISOString().slice(0, 7);
+
+        let totalIncome = 0;
+        let totalExpense = 0;
+        let monthIncome = 0;
+        let monthExpense = 0;
+
+        const accountBalances = {};
+        this.state.accounts.forEach(a => accountBalances[a.id] = a.openingBalanceCents || 0);
+
+        const categoryExpenses = {};
+
+        this.state.transactions.forEach(t => {
+          const isMonth = t.date.startsWith(currentMonth);
+
+          if (t.type === 'INCOME') {
+            totalIncome += t.amountCents;
+            if (isMonth) monthIncome += t.amountCents;
+            if (accountBalances[t.accountId] !== undefined) accountBalances[t.accountId] += t.amountCents;
+          } else if (t.type === 'EXPENSE') {
+            totalExpense += t.amountCents;
+            if (isMonth) monthExpense += t.amountCents;
+            if (accountBalances[t.accountId] !== undefined) accountBalances[t.accountId] -= t.amountCents;
+
+            categoryExpenses[t.categoryId] = (categoryExpenses[t.categoryId] || 0) + t.amountCents;
+          }
+        });
+
+        const totalBalance = Object.values(accountBalances).reduce((a, b) => a + b, 0);
+
+        return {
+          totalIncome,
+          totalExpense,
+          totalBalance,
+          monthIncome,
+          monthExpense,
+          monthNet: monthIncome - monthExpense,
+          accountBalances,
+          categoryExpenses
+        };
+      }
+
+      renderAll() {
+        document.getElementById('header-masjid-name').innerText = this.state.settings.masjidName;
+        document.getElementById('header-tagline').innerText = this.state.settings.tagline;
+        document.getElementById('tx-currency-symbol').innerText = this.state.settings.currencySymbol || '₹';
+
+        const calc = this.getCalculations();
+
+        // Dashboard KPIs
+        document.getElementById('dash-total-balance').innerText = this.formatCurrency(calc.totalBalance);
+        document.getElementById('dash-month-income').innerText = this.formatCurrency(calc.monthIncome);
+        document.getElementById('dash-month-expense').innerText = this.formatCurrency(calc.monthExpense);
+        
+        const netEl = document.getElementById('dash-month-net');
+        netEl.innerText = this.formatCurrency(calc.monthNet);
+
+        this.renderCategoryBreakdown(calc.categoryExpenses, calc.totalExpense);
+        this.renderRecentTransactions();
+        this.renderTransactions();
+        this.renderAccounts(calc.accountBalances);
+        this.renderCommittee();
+        this.renderReports();
+        this.renderSettingsForm();
+      }
+
+      renderCategoryBreakdown(catExpenses, totalExpense) {
+        const container = document.getElementById('dash-category-breakdown');
+        const catMap = new Map(this.state.categories.map(c => [c.id, c.name]));
+        const sorted = Object.entries(catExpenses).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+        if (sorted.length === 0) {
+          container.innerHTML = `<p class="text-xs text-gray-400 py-6 text-center">No expense activity recorded yet.</p>`;
+          return;
+        }
+
+        container.innerHTML = sorted.map(([id, amount]) => {
+          const pct = totalExpense > 0 ? ((amount / totalExpense) * 100).toFixed(1) : 0;
+          return `
+            <div>
+              <div class="flex justify-between text-xs font-semibold mb-1">
+                <span class="text-charcoal-800">${catMap.get(id) || 'General'}</span>
+                <span class="text-charcoal-950 font-bold tabular-nums">${this.formatCurrency(amount)} <span class="text-gray-400 text-[10px]">(${pct}%)</span></span>
+              </div>
+              <div class="w-full bg-ivory-200 h-1.5 rounded-full overflow-hidden">
+                <div class="bg-emerald-800 h-full rounded-full" style="width: ${pct}%"></div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      renderRecentTransactions() {
+        const container = document.getElementById('dash-recent-list');
+        const catMap = new Map(this.state.categories.map(c => [c.id, c.name]));
+        const recent = [...this.state.transactions].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 6);
+
+        if (recent.length === 0) {
+          container.innerHTML = `<p class="text-xs text-gray-400 py-8 text-center">No transactions recorded yet.</p>`;
+          return;
+        }
+
+        container.innerHTML = recent.map(t => {
+          const isInc = t.type === 'INCOME';
+          return `
+            <div class="py-3 flex items-center justify-between hover:bg-ivory-50/80 px-2 rounded-xl transition-colors">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${isInc ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-50 text-rose-700'}">
+                  ${isInc ? '↓' : '↑'}
+                </div>
+                <div>
+                  <p class="text-xs font-bold text-charcoal-900 line-clamp-1">${t.description || catMap.get(t.categoryId)}</p>
+                  <p class="text-[10px] text-gray-500 mt-0.5">${t.date} • ${catMap.get(t.categoryId)}</p>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="text-xs font-bold tabular-nums ${isInc ? 'text-emerald-800' : 'text-rose-700'}">
+                  ${isInc ? '+' : '-'}${this.formatCurrency(t.amountCents)}
+                </span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      renderTransactions() {
+        const container = document.getElementById('ledger-list');
+        const search = (document.getElementById('filter-search').value || '').toLowerCase();
+        const fType = document.getElementById('filter-type').value;
+        const fCat = document.getElementById('filter-category').value;
+        const fAcc = document.getElementById('filter-account').value;
+
+        const catMap = new Map(this.state.categories.map(c => [c.id, c.name]));
+        const accMap = new Map(this.state.accounts.map(a => [a.id, a.name]));
+
+        const catFilterEl = document.getElementById('filter-category');
+        if (catFilterEl.children.length <= 1) {
+          this.state.categories.forEach(c => {
+            catFilterEl.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+          });
+        }
+        const accFilterEl = document.getElementById('filter-account');
+        if (accFilterEl.children.length <= 1) {
+          this.state.accounts.forEach(a => {
+            accFilterEl.innerHTML += `<option value="${a.id}">${a.name}</option>`;
+          });
+        }
+
+        const filtered = this.state.transactions.filter(t => {
+          if (fType !== 'ALL' && t.type !== fType) return false;
+          if (fCat !== 'ALL' && t.categoryId !== fCat) return false;
+          if (fAcc !== 'ALL' && t.accountId !== fAcc) return false;
+          if (search) {
+            const str = (t.description + ' ' + (t.paidToOrDonor || '') + ' ' + (catMap.get(t.categoryId) || '')).toLowerCase();
+            return str.includes(search);
+          }
+          return true;
+        }).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        if (filtered.length === 0) {
+          container.innerHTML = `<div class="p-10 text-center text-gray-400 text-xs font-medium">No matching ledger records found</div>`;
+          return;
+        }
+
+        container.innerHTML = filtered.map(t => {
+          const isInc = t.type === 'INCOME';
+          return `
+            <div class="p-4 flex items-center justify-between hover:bg-ivory-50/70 transition-colors">
+              <div class="flex items-center gap-3.5">
+                <div class="w-9 h-9 rounded-2xl flex items-center justify-center font-bold text-sm shrink-0 ${isInc ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-50 text-rose-700'}">
+                  ${isInc ? '↓' : '↑'}
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs font-bold text-charcoal-950">${t.description}</span>
+                    ${t.receiptBase64 ? `<span title="Receipt attached" class="text-emerald-800 cursor-pointer text-xs" onclick="app.viewReceipt('${t.id}')">📎</span>` : ''}
+                  </div>
+                  <div class="flex flex-wrap items-center gap-1.5 text-[11px] text-gray-500 mt-0.5">
+                    <span>${t.date}</span> •
+                    <span class="bg-ivory-200/80 px-1.5 py-0.2 rounded font-medium text-charcoal-900">${catMap.get(t.categoryId)}</span> •
+                    <span>${accMap.get(t.accountId)}</span>
+                    ${t.paidToOrDonor ? `• <span class="italic font-medium text-charcoal-800">${t.paidToOrDonor}</span>` : ''}
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-3">
+                <div class="text-right">
+                  <div class="text-sm font-bold tabular-nums ${isInc ? 'text-emerald-800' : 'text-rose-700'}">
+                    ${isInc ? '+' : '-'}${this.formatCurrency(t.amountCents)}
+                  </div>
+                  <span class="text-[10px] text-gray-500 font-semibold px-2 py-0.5 bg-ivory-100 rounded-full">${t.paymentMethod}</span>
+                </div>
+                <button onclick="app.deleteTransaction('${t.id}')" title="Delete entry" class="text-gray-400 hover:text-rose-600 p-1 text-xs transition-colors">
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      /* Committee Management Logic */
+      renderCommittee() {
+        const grid = document.getElementById('committee-grid');
+        if (!grid) return;
+
+        if (this.state.committee.length === 0) {
+          grid.innerHTML = `
+            <div class="col-span-full p-12 text-center card-surface rounded-3xl space-y-3">
+              <div class="w-12 h-12 rounded-2xl bg-ivory-100 text-gold-600 flex items-center justify-center mx-auto">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+              </div>
+              <h3 class="font-serif-islamic font-bold text-lg text-charcoal-900">Build Your Committee Leadership</h3>
+              <p class="text-xs text-gray-500 max-w-sm mx-auto">Register trustees, administrators, and signatories to display official leadership structure and auto-fill audit reports.</p>
+              <button onclick="app.openMemberModal()" class="mt-2 px-4 py-2 bg-emerald-800 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-xs">
+                + Add Committee Member
+              </button>
+            </div>
+          `;
+          return;
+        }
+
+        grid.innerHTML = this.state.committee.map(m => {
+          const isActive = m.status === 'Active';
+          const avatarContent = m.photoBase64 
+            ? `<img src="${m.photoBase64}" class="w-full h-full object-cover" />`
+            : `<div class="w-full h-full flex items-center justify-center font-bold text-sm text-gold-600 bg-ivory-100">${m.name.charAt(0)}</div>`;
+
+          return `
+            <div class="card-surface p-5 rounded-3xl relative flex flex-col justify-between group">
+              <div>
+                <div class="flex items-start gap-3.5">
+                  <div class="w-14 h-14 rounded-2xl overflow-hidden border border-ivory-300 shrink-0 shadow-2xs">
+                    ${avatarContent}
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${m.role.includes('President') ? 'bg-gold-50 text-gold-700 border border-gold-300' : m.role.includes('Treasurer') ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-ivory-100 text-charcoal-800'}">${m.role}</span>
+                    <h3 class="font-bold text-charcoal-950 text-sm mt-1 truncate">${m.name}</h3>
+                    <p class="text-[11px] text-gray-500">${m.term || 'Executive Committee'}</p>
+                  </div>
+                </div>
+
+                <div class="mt-3.5 space-y-1.5 text-xs text-charcoal-800 border-t border-ivory-200 pt-3">
+                  ${m.phone ? `<p class="flex items-center gap-2"><svg class="w-3.5 h-3.5 text-emerald-800 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg><a href="tel:${m.phone}" class="hover:text-emerald-800 truncate">${m.phone}</a></p>` : ''}
+                  ${m.address ? `<p class="flex items-center gap-2 text-gray-600"><svg class="w-3.5 h-3.5 text-gray-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg><span class="truncate">${m.address}</span></p>` : ''}
+                  ${m.notes ? `<p class="text-[11px] text-gray-500 italic mt-1">${m.notes}</p>` : ''}
+                </div>
+              </div>
+
+              <div class="mt-4 pt-3 border-t border-ivory-200 flex justify-between items-center">
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${isActive ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-gray-100 text-gray-500'}">${m.status}</span>
+                <div class="flex gap-1.5">
+                  <button onclick="app.editMember('${m.id}')" class="px-2.5 py-1 text-xs font-semibold bg-ivory-100 text-charcoal-900 hover:bg-ivory-200 rounded-lg transition-colors">Edit</button>
+                  <button onclick="app.deleteMember('${m.id}')" class="px-2.5 py-1 text-xs font-semibold bg-rose-50 text-rose-700 hover:bg-rose-100 rounded-lg transition-colors">Delete</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      openMemberModal(member = null) {
+        this.state.tempMemberPhotoBase64 = member ? (member.photoBase64 || null) : null;
+        document.getElementById('mem-edit-id').value = member ? member.id : '';
+        document.getElementById('mem-name').value = member ? member.name : '';
+        document.getElementById('mem-role').value = member ? member.role : 'Executive Member';
+        document.getElementById('mem-phone').value = member ? (member.phone || '') : '';
+        document.getElementById('mem-term').value = member ? (member.term || '') : '2024 – 2027';
+        document.getElementById('mem-status').value = member ? member.status : 'Active';
+        document.getElementById('mem-address').value = member ? (member.address || '') : '';
+        document.getElementById('mem-notes').value = member ? (member.notes || '') : '';
+
+        this.updateMemberPhotoUI();
+        document.getElementById('member-modal-title').innerText = member ? 'Edit Committee Member' : 'Add Committee Member';
+        this.openModal('modal-member');
+      }
+
+      handleMemberPhotoUpload(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (!file.type.startsWith('image/')) {
+          this.toast('Please select a valid image file (JPG, PNG, WEBP)', 'error');
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const img = new Image();
+          img.src = event.target.result;
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const maxDim = 400; // Optimal portrait avatar resolution
+            let w = img.width;
+            let h = img.height;
+            if (w > h) {
+              if (w > maxDim) {
+                h = Math.round((h * maxDim) / w);
+                w = maxDim;
+              }
+            } else {
+              if (h > maxDim) {
+                w = Math.round((w * maxDim) / h);
+                h = maxDim;
+              }
+            }
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            this.state.tempMemberPhotoBase64 = canvas.toDataURL('image/jpeg', 0.8);
+            this.updateMemberPhotoUI();
+          };
+        };
+        reader.readAsDataURL(file);
+      }
+
+      removeMemberPhoto() {
+        this.state.tempMemberPhotoBase64 = null;
+        document.getElementById('mem-photo-file').value = '';
+        this.updateMemberPhotoUI();
+      }
+
+      updateMemberPhotoUI() {
+        const preview = document.getElementById('mem-photo-preview');
+        const placeholder = document.getElementById('mem-photo-placeholder');
+        const removeBtn = document.getElementById('mem-photo-remove-btn');
+
+        if (this.state.tempMemberPhotoBase64) {
+          preview.src = this.state.tempMemberPhotoBase64;
+          preview.classList.remove('hidden');
+          placeholder.classList.add('hidden');
+          removeBtn.classList.remove('hidden');
+        } else {
+          preview.src = '';
+          preview.classList.add('hidden');
+          placeholder.classList.remove('hidden');
+          removeBtn.classList.add('hidden');
+        }
+      }
+
+      editMember(id) {
+        const mem = this.state.committee.find(m => m.id === id);
+        if (mem) this.openMemberModal(mem);
+      }
+
+      async saveMember(e) {
+        e.preventDefault();
+        const editId = document.getElementById('mem-edit-id').value;
+        const memberPayload = {
+          id: editId || ('mem-' + Date.now()),
+          name: document.getElementById('mem-name').value.trim(),
+          role: document.getElementById('mem-role').value,
+          phone: document.getElementById('mem-phone').value.trim(),
+          term: document.getElementById('mem-term').value.trim(),
+          status: document.getElementById('mem-status').value,
+          address: document.getElementById('mem-address').value.trim(),
+          notes: document.getElementById('mem-notes').value.trim(),
+          photoBase64: this.state.tempMemberPhotoBase64 || null
+        };
+
+        await this.putToStore('committee', memberPayload);
+        if (editId) {
+          this.state.committee = this.state.committee.map(m => m.id === editId ? memberPayload : m);
+          this.toast('Member profile updated');
+        } else {
+          this.state.committee.push(memberPayload);
+          this.toast('Member added successfully');
+        }
+
+        this.closeModal('modal-member');
+        this.renderAll();
+      }
+
+      async deleteMember(id) {
+        if (!confirm('Are you sure you want to remove this committee member?')) return;
+        await this.deleteFromStore('committee', id);
+        this.state.committee = this.state.committee.filter(m => m.id !== id);
+        this.toast('Member removed');
+        this.renderAll();
+      }
+
+      renderAccounts(balances) {
+        const grid = document.getElementById('accounts-grid');
+        grid.innerHTML = this.state.accounts.map(acc => {
+          const bal = balances[acc.id] || 0;
+          return `
+            <div class="card-surface p-5 rounded-3xl border-l-4 border-l-emerald-800">
+              <div class="flex justify-between items-start">
+                <div>
+                  <h3 class="font-bold text-charcoal-950 text-sm">${acc.name}</h3>
+                  <span class="text-[10px] uppercase font-bold text-gray-500">${acc.type}</span>
+                </div>
+                <span class="text-xs px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 font-bold border border-emerald-200">Active</span>
+              </div>
+              <div class="mt-4 pt-3 border-t border-ivory-200 flex justify-between items-baseline">
+                <span class="text-xs text-gray-500">Current Balance</span>
+                <span class="text-xl font-bold tabular-nums text-emerald-950">${this.formatCurrency(bal)}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      renderReports() {
+        const selMonth = document.getElementById('report-month-select').value;
+        const catMap = new Map(this.state.categories.map(c => [c.id, c.name]));
+
+        const monthTxs = this.state.transactions.filter(t => t.date.startsWith(selMonth));
+
+        const income = monthTxs.filter(t => t.type === 'INCOME').reduce((s, t) => s + t.amountCents, 0);
+        const expense = monthTxs.filter(t => t.type === 'EXPENSE').reduce((s, t) => s + t.amountCents, 0);
+        const net = income - expense;
+
+        document.getElementById('report-masjid-title').innerText = this.state.settings.masjidName;
+        document.getElementById('report-period-title').innerText = `Monthly Financial Statement — ${selMonth}`;
+        
+        document.getElementById('rep-income').innerText = this.formatCurrency(income);
+        document.getElementById('rep-expense').innerText = this.formatCurrency(expense);
+        
+        const netEl = document.getElementById('rep-net');
+        netEl.innerText = this.formatCurrency(net);
+        netEl.className = `text-2xl font-bold tabular-nums mt-1 ${net >= 0 ? 'text-emerald-800' : 'text-rose-700'}`;
+
+        const catExp = {};
+        monthTxs.filter(t => t.type === 'EXPENSE').forEach(t => {
+          catExp[t.categoryId] = (catExp[t.categoryId] || 0) + t.amountCents;
+        });
+
+        const sortedCats = Object.entries(catExp).sort((a, b) => b[1] - a[1]);
+        const tbody = document.getElementById('rep-category-table');
+        
+        if (sortedCats.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-gray-400 text-xs">No expenses recorded in this period.</td></tr>`;
+        } else {
+          tbody.innerHTML = sortedCats.map(([id, amount]) => {
+            const pct = expense > 0 ? ((amount / expense) * 100).toFixed(1) : 0;
+            return `
+              <tr class="hover:bg-ivory-50/80 transition-colors">
+                <td class="p-3 font-semibold text-charcoal-900">${catMap.get(id) || 'General'}</td>
+                <td class="p-3 font-bold tabular-nums text-right">${this.formatCurrency(amount)}</td>
+                <td class="p-3 text-right font-medium text-gray-600">${pct}%</td>
+              </tr>
+            `;
+          }).join('');
+        }
+
+        // Dynamically reflect active committee signatories
+        const signArea = document.getElementById('report-sign-area');
+        const president = this.state.committee.find(m => m.role.includes('President') && m.status === 'Active');
+        const treasurer = this.state.committee.find(m => m.role.includes('Treasurer') && m.status === 'Active');
+        const secretary = this.state.committee.find(m => (m.role.includes('Secretary') || m.role.includes('General')) && m.status === 'Active');
+
+        signArea.innerHTML = `
+          <div>
+            <div class="border-b border-gray-400 pb-8 mb-2"></div>
+            <p class="font-bold text-charcoal-900">${president ? president.name : 'President / Mutawalli'}</p>
+            <p class="text-[10px] text-gray-500">Mutawalli / President</p>
+          </div>
+          <div>
+            <div class="border-b border-gray-400 pb-8 mb-2"></div>
+            <p class="font-bold text-charcoal-900">${treasurer ? treasurer.name : 'Treasurer / Khazanchi'}</p>
+            <p class="text-[10px] text-gray-500">Treasurer / Khazanchi</p>
+          </div>
+          <div>
+            <div class="border-b border-gray-400 pb-8 mb-2"></div>
+            <p class="font-bold text-charcoal-900">${secretary ? secretary.name : 'Auditor / Secretary'}</p>
+            <p class="text-[10px] text-gray-500">Secretary / Auditor</p>
+          </div>
+        `;
+      }
+
+      renderSettingsForm() {
+        document.getElementById('set-masjid-name').value = this.state.settings.masjidName;
+        document.getElementById('set-tagline').value = this.state.settings.tagline;
+        document.getElementById('set-currency').value = this.state.settings.currencySymbol;
+        document.getElementById('set-pin-enabled').checked = this.state.settings.isPinLocked || false;
+
+        const catContainer = document.getElementById('categories-pill-list');
+        catContainer.innerHTML = this.state.categories.map(c => `
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${c.type === 'INCOME' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-50 text-rose-700 border border-rose-200/60'}">
+            ${c.name}
+            ${!c.isDefault ? `<button onclick="app.deleteCategory('${c.id}')" class="hover:text-black font-bold">✕</button>` : ''}
+          </span>
+        `).join('');
+      }
+
+      /* Transaction Modal Logic */
+      openTransactionModal(type = 'INCOME') {
+        this.state.currentTxType = type;
+        this.state.tempReceiptBase64 = null;
+        document.getElementById('tx-edit-id').value = '';
+        document.getElementById('tx-amount').value = '';
+        document.getElementById('tx-description').value = '';
+        document.getElementById('tx-person').value = '';
+        document.getElementById('tx-notes').value = '';
+        document.getElementById('receipt-preview-box').classList.add('hidden');
+        document.getElementById('tx-receipt-file').value = '';
+
+        this.setTxType(type);
+        this.populateTxDropdowns();
+        this.openModal('modal-transaction');
+      }
+
+      setTxType(type) {
+        this.state.currentTxType = type;
+        const incBtn = document.getElementById('btn-type-income');
+        const expBtn = document.getElementById('btn-type-expense');
+        
+        if (type === 'INCOME') {
+          incBtn.className = 'px-4 py-1.5 text-xs font-bold rounded-lg bg-emerald-800 text-white transition-all shadow-2xs';
+          expBtn.className = 'px-4 py-1.5 text-xs font-bold rounded-lg text-charcoal-800 transition-all';
+          document.getElementById('tx-desc-label').innerText = 'Description';
+          document.getElementById('tx-person-label').innerText = 'Donor Name (Optional)';
+        } else {
+          incBtn.className = 'px-4 py-1.5 text-xs font-bold rounded-lg text-charcoal-800 transition-all';
+          expBtn.className = 'px-4 py-1.5 text-xs font-bold rounded-lg bg-rose-700 text-white transition-all shadow-2xs';
+          document.getElementById('tx-desc-label').innerText = 'Expense Item';
+          document.getElementById('tx-person-label').innerText = 'Paid To';
+        }
+        this.populateTxDropdowns();
+      }
+
+      populateTxDropdowns() {
+        const catSelect = document.getElementById('tx-category');
+        const filteredCats = this.state.categories.filter(c => c.type === this.state.currentTxType);
+        catSelect.innerHTML = filteredCats.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+
+        const accSelect = document.getElementById('tx-account');
+        accSelect.innerHTML = this.state.accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+      }
+
+      handleReceiptUpload(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const img = new Image();
+          img.src = event.target.result;
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const maxWidth = 1000;
+            let w = img.width;
+            let h = img.height;
+            if (w > maxWidth) {
+              h = Math.round((h * maxWidth) / w);
+              w = maxWidth;
+            }
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            this.state.tempReceiptBase64 = canvas.toDataURL('image/jpeg', 0.7);
+            
+            document.getElementById('receipt-preview-img').src = this.state.tempReceiptBase64;
+            document.getElementById('receipt-preview-box').classList.remove('hidden');
+          };
+        };
+        reader.readAsDataURL(file);
+      }
+
+      removeReceiptPhoto() {
+        this.state.tempReceiptBase64 = null;
+        document.getElementById('receipt-preview-box').classList.add('hidden');
+        document.getElementById('tx-receipt-file').value = '';
+      }
+
+      viewReceipt(txId) {
+        const tx = this.state.transactions.find(t => t.id === txId);
+        if (tx && tx.receiptBase64) {
+          const w = window.open('');
+          w.document.write(`<img src="${tx.receiptBase64}" style="max-width:100%; height:auto; margin:auto; display:block; border-radius: 12px;" />`);
+        }
+      }
+
+      async saveTransaction(e) {
+        e.preventDefault();
+        const amt = parseFloat(document.getElementById('tx-amount').value);
+        if (!amt || amt <= 0) return this.toast('Enter a valid amount', 'error');
+
+        const catId = document.getElementById('tx-category').value;
+        const catObj = this.state.categories.find(c => c.id === catId);
+        const descInput = document.getElementById('tx-description').value.trim();
+
+        const txPayload = {
+          id: 'tx-' + Date.now(),
+          type: this.state.currentTxType,
+          amountCents: this.toCents(amt),
+          date: document.getElementById('tx-date').value,
+          accountId: document.getElementById('tx-account').value,
+          categoryId: catId,
+          description: descInput || (catObj ? catObj.name : 'Ledger Record'),
+          paidToOrDonor: document.getElementById('tx-person').value.trim() || undefined,
+          paymentMethod: document.getElementById('tx-method').value,
+          receiptBase64: this.state.tempReceiptBase64 || undefined,
+          notes: document.getElementById('tx-notes').value.trim() || undefined,
+          createdAt: Date.now()
+        };
+
+        await this.putToStore('transactions', txPayload);
+        this.state.transactions.push(txPayload);
+        this.closeModal('modal-transaction');
+        this.toast('Transaction recorded');
+        this.renderAll();
+      }
+
+      async deleteTransaction(id) {
+        if (!confirm('Are you sure you want to delete this financial record?')) return;
+        await this.deleteFromStore('transactions', id);
+        this.state.transactions = this.state.transactions.filter(t => t.id !== id);
+        this.toast('Record deleted');
+        this.renderAll();
+      }
+
+      /* Transfers */
+      openTransferModal() {
+        const fromSel = document.getElementById('tr-from-acc');
+        const toSel = document.getElementById('tr-to-acc');
+        fromSel.innerHTML = this.state.accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+        toSel.innerHTML = this.state.accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+        this.openModal('modal-transfer');
+      }
+
+      async executeTransfer(e) {
+        e.preventDefault();
+        const amt = parseFloat(document.getElementById('tr-amount').value);
+        const fromId = document.getElementById('tr-from-acc').value;
+        const toId = document.getElementById('tr-to-acc').value;
+        const date = document.getElementById('tr-date').value;
+        const notes = document.getElementById('tr-notes').value;
+
+        if (!amt || amt <= 0) return this.toast('Enter a valid transfer amount', 'error');
+        if (fromId === toId) return this.toast('From and To accounts must be different', 'error');
+
+        const fromAcc = this.state.accounts.find(a => a.id === fromId);
+        const toAcc = this.state.accounts.find(a => a.id === toId);
+        const otherCat = this.state.categories.find(c => c.name.includes('Other')) || this.state.categories[0];
+
+        const txOut = {
+          id: 'tx-tr-out-' + Date.now(),
+          type: 'EXPENSE',
+          amountCents: this.toCents(amt),
+          date,
+          accountId: fromId,
+          categoryId: otherCat.id,
+          description: `Transfer to ${toAcc.name}`,
+          paymentMethod: 'BANK_TRANSFER',
+          notes: notes ? `Transfer: ${notes}` : 'Inter-account transfer',
+          createdAt: Date.now()
+        };
+
+        const txIn = {
+          id: 'tx-tr-in-' + Date.now(),
+          type: 'INCOME',
+          amountCents: this.toCents(amt),
+          date,
+          accountId: toId,
+          categoryId: otherCat.id,
+          description: `Transfer from ${fromAcc.name}`,
+          paymentMethod: 'BANK_TRANSFER',
+          notes: notes ? `Transfer: ${notes}` : 'Inter-account transfer',
+          createdAt: Date.now() + 1
+        };
+
+        await this.putToStore('transactions', txOut);
+        await this.putToStore('transactions', txIn);
+        this.state.transactions.push(txOut, txIn);
+
+        this.closeModal('modal-transfer');
+        this.toast('Funds transferred successfully');
+        this.renderAll();
+      }
+
+      /* Add Accounts */
+      openAddAccountModal() {
+        document.getElementById('new-acc-name').value = '';
+        document.getElementById('new-acc-opening').value = '';
+        this.openModal('modal-add-account');
+      }
+
+      async saveNewAccount(e) {
+        e.preventDefault();
+        const name = document.getElementById('new-acc-name').value.trim();
+        if (!name) return;
+
+        const acc = {
+          id: 'acc-' + Date.now(),
+          name,
+          type: document.getElementById('new-acc-type').value,
+          openingBalanceCents: this.toCents(document.getElementById('new-acc-opening').value || 0),
+          createdAt: Date.now()
+        };
+
+        await this.putToStore('accounts', acc);
+        this.state.accounts.push(acc);
+        this.closeModal('modal-add-account');
+        this.toast('Account added');
+        this.renderAll();
+      }
+
+      /* Settings & Categories */
+      async saveProfileSettings() {
+        this.state.settings.masjidName = document.getElementById('set-masjid-name').value.trim() || 'Masjid';
+        this.state.settings.tagline = document.getElementById('set-tagline').value.trim();
+        this.state.settings.currencySymbol = document.getElementById('set-currency').value.trim() || '₹';
+        
+        await this.putToStore('settings', this.state.settings);
+        this.toast('Settings saved');
+        this.renderAll();
+      }
+
+      async savePinSettings() {
+        const isLocked = document.getElementById('set-pin-enabled').checked;
+        const pinVal = document.getElementById('set-pin-value').value.trim();
+
+        if (isLocked && pinVal.length === 4) {
+          this.state.settings.pinHash = await this.hashString(pinVal);
+          this.state.settings.isPinLocked = true;
+        } else if (!isLocked) {
+          this.state.settings.isPinLocked = false;
+        } else if (isLocked && !this.state.settings.pinHash) {
+          return this.toast('Enter a 4-digit PIN', 'error');
+        }
+
+        await this.putToStore('settings', this.state.settings);
+        this.toast('Security PIN updated');
+      }
+
+      async addCategory() {
+        const name = document.getElementById('new-cat-name').value.trim();
+        if (!name) return;
+
+        const cat = {
+          id: 'cat-' + Date.now(),
+          name,
+          type: document.getElementById('new-cat-type').value,
+          isDefault: false
+        };
+
+        await this.putToStore('categories', cat);
+        this.state.categories.push(cat);
+        document.getElementById('new-cat-name').value = '';
+        this.toast('Category added');
+        this.renderAll();
+      }
+
+      async deleteCategory(id) {
+        await this.deleteFromStore('categories', id);
+        this.state.categories = this.state.categories.filter(c => c.id !== id);
+        this.toast('Category removed');
+        this.renderAll();
+      }
+
+      /* Backup & CSV Exporter */
+      exportBackup() {
+        const data = {
+          transactions: this.state.transactions,
+          accounts: this.state.accounts,
+          categories: this.state.categories,
+          committee: this.state.committee,
+          settings: this.state.settings,
+          exportedAt: new Date().toISOString()
+        };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `masjid-ledger-backup-${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        this.toast('Backup JSON exported');
+      }
+
+      importBackup(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (!confirm('Warning: Restoring will overwrite existing ledger data. Continue?')) return;
+
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+          try {
+            const data = JSON.parse(event.target.result);
+            if (data.transactions && data.accounts) {
+              const tx = this.db.transaction(['transactions', 'accounts', 'categories', 'committee', 'settings'], 'readwrite');
+              await tx.objectStore('transactions').clear();
+              await tx.objectStore('accounts').clear();
+              await tx.objectStore('categories').clear();
+              await tx.objectStore('committee').clear();
+
+              for (const t of data.transactions) tx.objectStore('transactions').put(t);
+              for (const a of data.accounts) tx.objectStore('accounts').put(a);
+              for (const c of data.categories) tx.objectStore('categories').put(c);
+              if (data.committee) for (const m of data.committee) tx.objectStore('committee').put(m);
+              if (data.settings) tx.objectStore('settings').put(data.settings);
+
+              tx.oncomplete = () => {
+                this.toast('Restoration completed');
+                setTimeout(() => window.location.reload(), 500);
+              };
+            }
+          } catch (err) {
+            this.toast('Invalid backup file format', 'error');
+          }
+        };
+        reader.readAsText(file);
+      }
+
+      exportCSV() {
+        const catMap = new Map(this.state.categories.map(c => [c.id, c.name]));
+        const accMap = new Map(this.state.accounts.map(a => [a.id, a.name]));
+
+        const headers = ['Date', 'Type', 'Category', 'Account', 'Amount', 'Payment Method', 'Donor / Paid To', 'Description'];
+        const rows = this.state.transactions.map(t => [
+          t.date,
+          t.type,
+          `"${catMap.get(t.categoryId) || ''}"`,
+          `"${accMap.get(t.accountId) || ''}"`,
+          (t.amountCents / 100).toFixed(2),
+          t.paymentMethod,
+          `"${t.paidToOrDonor || ''}"`,
+          `"${t.description.replace(/"/g, '""')}"`
+        ]);
+
+        const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `masjid-ledger-${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        this.toast('CSV exported');
+      }
+
+      openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+      closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+    }
+
+    // Launch Application
+    const app = new MasjidLedgerApp();
+    window.addEventListener('DOMContentLoaded', () => app.init());
+  </script>
+</body>
+        </html>
